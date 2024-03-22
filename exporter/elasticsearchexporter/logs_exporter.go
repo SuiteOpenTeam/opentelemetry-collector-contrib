@@ -19,10 +19,11 @@ import (
 type elasticsearchLogsExporter struct {
 	logger *zap.Logger
 
-	index          string
-	logstashFormat LogstashFormatSettings
-	dynamicIndex   bool
-	maxAttempts    int
+	index                          string
+	logstashFormat                 LogstashFormatSettings
+	dynamicIndex                   bool
+	partitionIndexSuffixDateFormat string
+	maxAttempts                    int
 
 	client      *esClientCurrent
 	bulkIndexer esBulkIndexerCurrent
@@ -68,8 +69,10 @@ func newLogsExporter(logger *zap.Logger, cfg *Config) (*elasticsearchLogsExporte
 		client:      client,
 		bulkIndexer: bulkIndexer,
 
-		index:          indexStr,
-		dynamicIndex:   cfg.LogsDynamicIndex.Enabled,
+		index:                          indexStr,
+		dynamicIndex:                   cfg.LogsDynamicIndex.Enabled,
+		partitionIndexSuffixDateFormat: cfg.LogsDynamicIndex.PartitionIndexSuffixDateFormat,
+
 		maxAttempts:    maxAttempts,
 		model:          model,
 		logstashFormat: cfg.LogstashFormat,
@@ -114,6 +117,12 @@ func (e *elasticsearchLogsExporter) pushLogRecord(ctx context.Context, resource 
 		suffix := getFromBothResourceAndAttribute(indexSuffix, resource, record)
 
 		fIndex = fmt.Sprintf("%s%s%s", prefix, fIndex, suffix)
+
+		partSuffix := time.Now().Format(e.partitionIndexSuffixDateFormat)
+		if partSuffix == "" {
+			partSuffix = time.Now().Format("2006-01")
+		}
+		fIndex = fmt.Sprintf("%s-%s", partSuffix, partSuffix)
 	}
 
 	if e.logstashFormat.Enabled {

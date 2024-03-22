@@ -71,7 +71,8 @@ type LogstashFormatSettings struct {
 }
 
 type DynamicIndexSetting struct {
-	Enabled bool `mapstructure:"enabled"`
+	Enabled                        bool   `mapstructure:"enabled"`
+	PartitionIndexSuffixDateFormat string `mapstructure:"partitionIndexSuffixDateFormat"` // yyyy-MM-dd yyyy-MM
 }
 
 type ClientConfig struct {

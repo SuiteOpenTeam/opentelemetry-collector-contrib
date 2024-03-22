@@ -19,10 +19,12 @@ import (
 type elasticsearchTracesExporter struct {
 	logger *zap.Logger
 
-	index          string
-	logstashFormat LogstashFormatSettings
-	dynamicIndex   bool
-	maxAttempts    int
+	index                          string
+	logstashFormat                 LogstashFormatSettings
+	dynamicIndex                   bool
+	partitionIndexSuffixDateFormat string
+
+	maxAttempts int
 
 	client      *esClientCurrent
 	bulkIndexer esBulkIndexerCurrent
@@ -60,8 +62,10 @@ func newTracesExporter(logger *zap.Logger, cfg *Config) (*elasticsearchTracesExp
 		client:      client,
 		bulkIndexer: bulkIndexer,
 
-		index:          cfg.TracesIndex,
-		dynamicIndex:   cfg.TracesDynamicIndex.Enabled,
+		index:                          cfg.TracesIndex,
+		dynamicIndex:                   cfg.TracesDynamicIndex.Enabled,
+		partitionIndexSuffixDateFormat: cfg.TracesDynamicIndex.PartitionIndexSuffixDateFormat,
+
 		maxAttempts:    maxAttempts,
 		model:          model,
 		logstashFormat: cfg.LogstashFormat,
@@ -106,6 +110,12 @@ func (e *elasticsearchTracesExporter) pushTraceRecord(ctx context.Context, resou
 		suffix := getFromBothResourceAndAttribute(indexSuffix, resource, span)
 
 		fIndex = fmt.Sprintf("%s%s%s", prefix, fIndex, suffix)
+
+		partSuffix := time.Now().Format(e.partitionIndexSuffixDateFormat)
+		if partSuffix == "" {
+			partSuffix = time.Now().Format("2006-01")
+		}
+		fIndex = fmt.Sprintf("%s-%s", partSuffix, partSuffix)
 	}
 
 	if e.logstashFormat.Enabled {

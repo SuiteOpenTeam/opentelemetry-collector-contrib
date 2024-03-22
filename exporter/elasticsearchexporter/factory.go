@@ -43,9 +43,15 @@ func createDefaultConfig() component.Config {
 		ClientConfig: ClientConfig{
 			Timeout: 90 * time.Second,
 		},
-		Index:       "",
-		LogsIndex:   defaultLogsIndex,
+		Index:     "",
+		LogsIndex: defaultLogsIndex,
+		LogsDynamicIndex: DynamicIndexSetting{
+			Enabled: false,
+		},
 		TracesIndex: defaultTracesIndex,
+		TracesDynamicIndex: DynamicIndexSetting{
+			Enabled: false,
+		},
 		Retry: RetrySettings{
 			Enabled:         true,
 			MaxRequests:     3,
