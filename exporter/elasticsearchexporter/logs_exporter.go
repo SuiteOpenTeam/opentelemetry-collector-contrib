@@ -122,7 +122,7 @@ func (e *elasticsearchLogsExporter) pushLogRecord(ctx context.Context, resource 
 		if partSuffix == "" {
 			partSuffix = time.Now().Format("2006-01")
 		}
-		fIndex = fmt.Sprintf("%s-%s", partSuffix, partSuffix)
+		fIndex = fmt.Sprintf("%s-%s", fIndex, partSuffix)
 	}
 
 	if e.logstashFormat.Enabled {

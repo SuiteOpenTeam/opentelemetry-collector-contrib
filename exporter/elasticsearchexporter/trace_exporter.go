@@ -115,7 +115,7 @@ func (e *elasticsearchTracesExporter) pushTraceRecord(ctx context.Context, resou
 		if partSuffix == "" {
 			partSuffix = time.Now().Format("2006-01")
 		}
-		fIndex = fmt.Sprintf("%s-%s", partSuffix, partSuffix)
+		fIndex = fmt.Sprintf("%s-%s", fIndex, partSuffix)
 	}
 
 	if e.logstashFormat.Enabled {
