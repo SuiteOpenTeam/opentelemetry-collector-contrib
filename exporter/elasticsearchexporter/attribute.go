@@ -11,6 +11,7 @@ import "go.opentelemetry.io/collector/pdata/pcommon"
 const (
 	indexPrefix = "elasticsearch.index.prefix"
 	indexSuffix = "elasticsearch.index.suffix"
+	indexFully  = "elasticsearch.index.fully"
 )
 
 // resource is higher priotized than record attribute

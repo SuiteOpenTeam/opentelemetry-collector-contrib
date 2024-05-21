@@ -106,16 +106,20 @@ func (e *elasticsearchTracesExporter) pushTraceData(
 func (e *elasticsearchTracesExporter) pushTraceRecord(ctx context.Context, resource pcommon.Resource, span ptrace.Span, scope pcommon.InstrumentationScope) error {
 	fIndex := e.index
 	if e.dynamicIndex {
-		prefix := getFromBothResourceAndAttribute(indexPrefix, resource, span)
-		suffix := getFromBothResourceAndAttribute(indexSuffix, resource, span)
+		if fullyIndex, exists := span.Attributes().Get(indexFully); exists {
+			fIndex = fullyIndex.AsString()
+		} else {
+			prefix := getFromBothResourceAndAttribute(indexPrefix, resource, span)
+			suffix := getFromBothResourceAndAttribute(indexSuffix, resource, span)
 
-		fIndex = fmt.Sprintf("%s%s%s", prefix, fIndex, suffix)
+			fIndex = fmt.Sprintf("%s%s%s", prefix, fIndex, suffix)
 
-		partSuffix := time.Now().Format(e.partitionIndexSuffixDateFormat)
-		if partSuffix == "" {
-			partSuffix = time.Now().Format("2006-01")
+			partSuffix := time.Now().Format(e.partitionIndexSuffixDateFormat)
+			if partSuffix == "" {
+				partSuffix = time.Now().Format("2006-01")
+			}
+			fIndex = fmt.Sprintf("%s-%s", fIndex, partSuffix)
 		}
-		fIndex = fmt.Sprintf("%s-%s", fIndex, partSuffix)
 	}
 
 	if e.logstashFormat.Enabled {

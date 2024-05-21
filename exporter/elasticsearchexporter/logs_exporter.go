@@ -112,17 +112,23 @@ func (e *elasticsearchLogsExporter) pushLogsData(ctx context.Context, ld plog.Lo
 
 func (e *elasticsearchLogsExporter) pushLogRecord(ctx context.Context, resource pcommon.Resource, record plog.LogRecord, scope pcommon.InstrumentationScope) error {
 	fIndex := e.index
+
 	if e.dynamicIndex {
-		prefix := getFromBothResourceAndAttribute(indexPrefix, resource, record)
-		suffix := getFromBothResourceAndAttribute(indexSuffix, resource, record)
 
-		fIndex = fmt.Sprintf("%s%s%s", prefix, fIndex, suffix)
+		if fullyIndex, exists := record.Attributes().Get(indexFully); exists {
+			fIndex = fullyIndex.AsString()
+		} else {
+			prefix := getFromBothResourceAndAttribute(indexPrefix, resource, record)
+			suffix := getFromBothResourceAndAttribute(indexSuffix, resource, record)
 
-		partSuffix := time.Now().Format(e.partitionIndexSuffixDateFormat)
-		if partSuffix == "" {
-			partSuffix = time.Now().Format("2006-01")
+			fIndex = fmt.Sprintf("%s%s%s", prefix, fIndex, suffix)
+
+			partSuffix := time.Now().Format(e.partitionIndexSuffixDateFormat)
+			if partSuffix == "" {
+				partSuffix = time.Now().Format("2006-01")
+			}
+			fIndex = fmt.Sprintf("%s-%s", fIndex, partSuffix)
 		}
-		fIndex = fmt.Sprintf("%s-%s", fIndex, partSuffix)
 	}
 
 	if e.logstashFormat.Enabled {
